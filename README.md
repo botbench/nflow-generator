@@ -6,28 +6,15 @@ It is useful for determining whether the netflow collector is operating and/or r
 
 nflow-generator generates several netflow datagrams per second, each with 8 or 16 records for varying kinds of traffic (HTTP, SSH, SNMP, DNS, MySQL, and many others.)
 
-### Docker Image Run (Easiest)
+### TODO
 
-Simply run in a container and pass any arguments at runtime. Below is an example passing the `--help` flag:
+This will be made into a containerized service with REST API.
 
-```
-docker run -it --rm networkstatic/nflow-generator --help
-```
-
-To generate mock flow data simply add the target IP and port:
-
-```
-docker run -it --rm networkstatic/nflow-generator -t <ip> -p <port>
-```
-
-### Download the binary
-
-You can download the Linux binary here [nflow-generator-x86_64-linux](https://github.com/nerdalert/nflow-generator/blob/master/binaries/nflow-generator-x86_64-linux).
 ### Build
 
 Install [Go](http://golang.org/doc/install), then:
 
-	git clone https://github.com/nerdalert/nflow-generator.git 
+	git clone https://github.com/botbench/nflow-generator.git 
 	cd <dir>
 	go build
 
@@ -37,7 +24,7 @@ Go build will leave a binary in the root directory that can be run.
 
 Feed it the target collector and port, and optional "false-index" flag:
 
-	./nflow-generator -t <ip> -p <port> [ -f | --false-index ]
+	./nflow_generator -t <ip> -p <port> [ -f | --false-index ]
 
 ### Run a Test Collection
 
@@ -54,7 +41,7 @@ nfcapd -E  -p 9001 -l /tmp/nfcap-test
 In a seperate console, run the netflow-generator pointing at an IP on the host the collector is running on (in this case the VM has an IP of 192.168.1.113).
 
 ```
-sudo docker run -it --rm networkstatic/nflow-generator -t 192.168.1.113 -p 9001
+./nflow_generator -t 192.168.1.113 -p 9001
 ```
 
 - You should start seeing records displayed to the output of the screen running nfcapd like the following.
