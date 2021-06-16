@@ -7,11 +7,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/jessevdk/go-flags"
+	"log"
 	"math/rand"
 	"net"
 	"os"
 	"time"
+
+	"github.com/jessevdk/go-flags"
 )
 
 type Proto int
@@ -61,9 +63,9 @@ func main() {
 	}
 	conn, err := net.DialUDP("udp", nil, udpAddr)
 	if err != nil {
-		log.Fatal("Error connecting to the target collector: ", err)
+		log.Println("Error connecting to the target collector: " + err.Error())
 	}
-	log.Infof("sending netflow data to a collector ip: %s and port: %s. \n"+
+	log.Println("sending netflow data to a collector ip: %s and port: %s. \n"+
 		"Use ctrl^c to terminate the app.", opts.CollectorIP, opts.CollectorPort)
 
 	for {
@@ -78,14 +80,16 @@ func main() {
 			buffer := BuildNFlowPayload(data)
 			_, err := conn.Write(buffer.Bytes())
 			if err != nil {
-				log.Fatal("Error connecting to the target collector: ", err)
+				log.Println("Error connecting to the target collector: " + err.Error())
+				os.Exit(1)
 			}
 		} else {
 			data := GenerateNetflow(16)
 			buffer := BuildNFlowPayload(data)
 			_, err := conn.Write(buffer.Bytes())
 			if err != nil {
-				log.Fatal("Error connecting to the target collector: ", err)
+				log.Println("Error connecting to the target collector: " + err.Error())
+				os.Exit(1)
 			}
 		}
 		// add some periodic spike data

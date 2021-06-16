@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"log"
 	"math/rand"
 	"net"
 	"time"
@@ -87,7 +88,7 @@ func BuildNFlowPayload(data Netflow) bytes.Buffer {
 	for _, record := range data.Records {
 		err := binary.Write(buffer, binary.BigEndian, &record)
 		if err != nil {
-			log.Println("Writing netflow record failed:", err)
+			log.Println("Writing netflow record failed:" + err.Error())
 		}
 	}
 	return *buffer

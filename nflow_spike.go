@@ -1,5 +1,10 @@
 package main
 
+import (
+	"log"
+	"os"
+)
+
 //import "fmt"
 
 //Generate a netflow packet w/ user-defined record count
@@ -39,7 +44,8 @@ func spikeFlowPayload() []NetflowPayload {
 	case "bittorrent":
 		payload[0] = CreateBitorrentFlow()
 	default:
-		log.Fatalf("protocol option %s is not valid, see --help for options", opts.SpikeProto)
+		log.Printf("protocol option %s is not valid, see --help for options", opts.SpikeProto)
+		os.Exit(1)
 	}
 	return payload
 }
