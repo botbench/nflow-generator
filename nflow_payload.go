@@ -117,7 +117,7 @@ func CreateNFlowHeader(recordCount int) NetflowHeader {
 	t := time.Now().UnixNano()
 	sec := t / int64(time.Second)
 	nsec := t - sec*int64(time.Second)
-	sysUptime = uint32((t-StartTime) / int64(time.Millisecond))+1000
+	sysUptime = uint32((t-StartTime)/int64(time.Millisecond)) + 1000
 	flowSequence++
 
 	// log.Infof("Time: %d; Seconds: %d; Nanoseconds: %d\n", t, sec, nsec)
@@ -529,13 +529,13 @@ func CreateRandomFlow() NetflowPayload {
 }
 
 // patch up the common fields of the packets
-func FillCommonFields (
-		payload *NetflowPayload, 
-		numPktOct int, 
-		ipProtocol int, 
-		srcPrefixMask int) NetflowPayload {
+func FillCommonFields(
+	payload *NetflowPayload,
+	numPktOct int,
+	ipProtocol int,
+	srcPrefixMask int) NetflowPayload {
 
-// Fill template with values not filled by caller
+	// Fill template with values not filled by caller
 	// payload.SrcIP = IPtoUint32("10.154.20.12")
 	// payload.DstIP = IPtoUint32("77.12.190.94")
 	// payload.NextHopIP = IPtoUint32("150.20.145.1")
@@ -558,10 +558,10 @@ func FillCommonFields (
 	payload.Padding2 = 0
 
 	// now handle computed values
-	if !opts.FalseIndex {                       // default interfaces are zero
+	if !opts.FalseIndex { // default interfaces are zero
 		payload.SnmpInIndex = 0
 		payload.SnmpOutIndex = 0
-	} else if payload.SrcIP > payload.DstIP {   // false-index
+	} else if payload.SrcIP > payload.DstIP { // false-index
 		payload.SnmpInIndex = 1
 		payload.SnmpOutIndex = 2
 	} else {
@@ -570,8 +570,8 @@ func FillCommonFields (
 	}
 
 	uptime := int(sysUptime)
-	payload.SysUptimeEnd = uint32(uptime - randomNum(10,500))
-	payload.SysUptimeStart = payload.SysUptimeEnd - uint32(randomNum(10,500))
+	payload.SysUptimeEnd = uint32(uptime - randomNum(10, 500))
+	payload.SysUptimeStart = payload.SysUptimeEnd - uint32(randomNum(10, 500))
 
 	// log.Infof("S&D : %x %x %d, %d", payload.SrcIP, payload.DstIP, payload.DstPort, payload.SnmpInIndex)
 	// log.Infof("Time: %d %d %d", sysUptime, payload.SysUptimeStart, payload.SysUptimeEnd)
