@@ -8,43 +8,43 @@ import (
 //import "fmt"
 
 //Generate a netflow packet w/ user-defined record count
-func GenerateSpike() Netflow {
+func GenerateSpike(spike_proto Proto) Netflow {
 	data := new(Netflow)
 	header := CreateNFlowHeader(1)
 	records := []NetflowPayload{}
-	records = spikeFlowPayload()
+	records = spikeFlowPayload(spike_proto)
 	data.Header = header
 	data.Records = records
 	return *data
 }
 
-func spikeFlowPayload() []NetflowPayload {
+func spikeFlowPayload(spike_proto Proto) []NetflowPayload {
 	payload := make([]NetflowPayload, 1)
-	switch opts.SpikeProto {
-	case "ssh":
+	switch spike_proto {
+	case PROTO_SSH:
 		payload[0] = CreateSshFlow()
-	case "ftp":
+	case PROTO_FTP:
 		payload[0] = CreateFTPFlow()
-	case "http":
+	case PROTO_HTTP:
 		payload[0] = CreateHttpFlow()
-	case "https":
+	case PROTO_HTTPS:
 		payload[0] = CreateHttpsFlow()
-	case "ntp":
+	case PROTO_NTP:
 		payload[0] = CreateNtpFlow()
-	case "snmp":
+	case PROTO_SNMP:
 		payload[0] = CreateSnmpFlow()
-	case "imaps":
+	case PROTO_IMAPS:
 		payload[0] = CreateImapsFlow()
-	case "mysql":
+	case PROTO_MYSQL:
 		payload[0] = CreateMySqlFlow()
-	case "https_alt":
+	case PROTO_HTTPS_ALT:
 		payload[0] = CreateHttpAltFlow()
-	case "p2p":
+	case PROTO_P2P:
 		payload[0] = CreateP2pFlow()
-	case "bittorrent":
+	case PROTO_BITTORRENT:
 		payload[0] = CreateBitorrentFlow()
 	default:
-		log.Printf("protocol option %s is not valid, see --help for options", opts.SpikeProto)
+		log.Printf("Invalid protocol option for spike")
 		os.Exit(1)
 	}
 	return payload

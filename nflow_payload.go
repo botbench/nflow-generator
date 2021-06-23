@@ -558,16 +558,16 @@ func FillCommonFields(
 	payload.Padding2 = 0
 
 	// now handle computed values
-	if !opts.FalseIndex { // default interfaces are zero
-		payload.SnmpInIndex = 0
-		payload.SnmpOutIndex = 0
-	} else if payload.SrcIP > payload.DstIP { // false-index
-		payload.SnmpInIndex = 1
-		payload.SnmpOutIndex = 2
-	} else {
-		payload.SnmpInIndex = 2
-		payload.SnmpOutIndex = 1
-	}
+	// if !opts.FalseIndex { // default interfaces are zero
+	payload.SnmpInIndex = 0
+	payload.SnmpOutIndex = 0
+	// } else if payload.SrcIP > payload.DstIP { // false-index
+	// 	payload.SnmpInIndex = 1
+	// 	payload.SnmpOutIndex = 2
+	// } else {
+	// 	payload.SnmpInIndex = 2
+	// 	payload.SnmpOutIndex = 1
+	// }
 
 	uptime := int(sysUptime)
 	payload.SysUptimeEnd = uint32(uptime - randomNum(10, 500))

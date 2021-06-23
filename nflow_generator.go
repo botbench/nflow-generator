@@ -6,74 +6,81 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"net"
 	"os"
 	"time"
-
-	"github.com/jessevdk/go-flags"
 )
 
 type Proto int
 
 const (
-	FTP Proto = iota + 1
-	SSH
-	DNS
-	HTTP
-	HTTPS
-	NTP
-	SNMP
-	IMAPS
-	MYSQL
-	HTTPS_ALT
-	P2P
-	BITTORRENT
+	PROTO_NONE Proto = iota
+	PROTO_FTP
+	PROTO_SSH
+	PROTO_DNS
+	PROTO_HTTP
+	PROTO_HTTPS
+	PROTO_NTP
+	PROTO_SNMP
+	PROTO_IMAPS
+	PROTO_MYSQL
+	PROTO_HTTPS_ALT
+	PROTO_P2P
+	PROTO_BITTORRENT
 )
-
-var opts struct {
-	CollectorIP   string `short:"t" long:"target" description:"target ip address of the netflow collector"`
-	CollectorPort string `short:"p" long:"port" description:"port number of the target netflow collector"`
-	SpikeProto    string `short:"s" long:"spike" description:"run a second thread generating a spike for the specified protocol"`
-	FalseIndex    bool   `short:"f" long:"false-index" description:"generate false SNMP interface indexes, otherwise set to 0"`
-	Help          bool   `short:"h" long:"help" description:"show nflow-generator help"`
-}
 
 func main() {
 
-	_, err := flags.Parse(&opts)
-	if err != nil {
-		showUsage()
+	collector_ip := os.Getenv("COLLECTOR_IP")
+	collector_port := os.Getenv("COLLECTOR_PORT")
+
+	if collector_ip == "" || collector_port == "" {
+		log.Println("Error: both COLLECTOR_IP and COLLECTOR_PORT environment variables must be set")
 		os.Exit(1)
 	}
-	if opts.Help == true {
-		showUsage()
-		os.Exit(1)
-	}
-	if opts.CollectorIP == "" || opts.CollectorPort == "" {
-		showUsage()
-		os.Exit(1)
-	}
-	collector := opts.CollectorIP + ":" + opts.CollectorPort
-	udpAddr, err := net.ResolveUDPAddr("udp", collector)
+
+	collector := collector_ip + ":" + collector_port
+
+	start_server(collector)
+}
+
+func generate(gen_ctx *generate_context_t) {
+	// log.Println("generate called")
+	log.Printf("generate called: g_ctx: %p\n", gen_ctx)
+	gen_ctx.is_running = true
+	udpAddr, err := net.ResolveUDPAddr("udp", gen_ctx.collector)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	conn, err := net.DialUDP("udp", nil, udpAddr)
 	if err != nil {
 		log.Println("Error connecting to the target collector: " + err.Error())
 	}
-	log.Println("sending netflow data to a collector ip: %s and port: %s. \n"+
-		"Use ctrl^c to terminate the app.", opts.CollectorIP, opts.CollectorPort)
+	defer conn.Close()
+
+	log.Println("sending netflow data to collector" + gen_ctx.collector)
 
 	for {
+		// log.Println("generate: top of loop")
+		select {
+		case command := <-gen_ctx.command:
+			log.Printf("generate: command received: %d\n", command)
+			if command == 0 {
+				gen_ctx.is_running = false
+				log.Println("generate: finishing up")
+				return
+			}
+		default:
+		}
+
 		rand.Seed(time.Now().Unix())
 		n := randomNum(50, 1000)
 		// add spike data
-		if opts.SpikeProto != "" {
-			GenerateSpike()
+		if gen_ctx.spike_proto != PROTO_NONE {
+			GenerateSpike(gen_ctx.spike_proto)
 		}
 		if n > 900 {
 			data := GenerateNetflow(8)
@@ -104,52 +111,4 @@ func main() {
 
 func randomNum(min, max int) int {
 	return rand.Intn(max-min) + min
-}
-
-func showUsage() {
-	var usage string
-	usage = `
-Usage:
-  main [OPTIONS] [collector IP address] [collector port number]
-
-  Send mock Netflow version 5 data to designated collector IP & port.
-  Time stamps in all datagrams are set to UTC.
-
-Application Options:
-  -t, --target= target ip address of the netflow collector
-  -p, --port=   port number of the target netflow collector
-  -s, --spike run a second thread generating a spike for the specified protocol
-    protocol options are as follows:
-        ftp - generates tcp/21
-        ssh  - generates tcp/22
-        dns - generates udp/54
-        http - generates tcp/80
-        https - generates tcp/443
-        ntp - generates udp/123
-        snmp - generates ufp/161
-        imaps - generates tcp/993
-        mysql - generates tcp/3306
-        https_alt - generates tcp/8080
-        p2p - generates udp/6681
-        bittorrent - generates udp/6682
-  -f, --false-index generate a false snmp index values of 1 or 2. The default is 0. (Optional)
-
-Example Usage:
-
-    -first build from source (one time)
-    go build   
-
-    -generate default flows to device 172.16.86.138, port 9995
-    ./nflow-generator -t 172.16.86.138 -p 9995 
-
-    -generate default flows along with a spike in the specified protocol:
-    ./nflow-generator -t 172.16.86.138 -p 9995 -s ssh
-
-    -generate default flows with "false index" settings for snmp interfaces 
-    ./nflow-generator -t 172.16.86.138 -p 9995 -f
-
-Help Options:
-  -h, --help    Show this help message
-  `
-	fmt.Print(usage)
 }
