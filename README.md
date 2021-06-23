@@ -6,10 +6,6 @@ It is useful for determining whether the netflow collector is operating and/or r
 
 nflow-generator generates several netflow datagrams per second, each with 8 or 16 records for varying kinds of traffic (HTTP, SSH, SNMP, DNS, MySQL, and many others.)
 
-### TODO
-
-This will be made into a containerized service with REST API.
-
 ### Build
 
 Install [Go](http://golang.org/doc/install), then:
@@ -20,11 +16,19 @@ Install [Go](http://golang.org/doc/install), then:
 
 Go build will leave a binary in the root directory that can be run.
 	
-### RUN
+### Run
 
-Feed it the target collector and port, and optional "false-index" flag:
+Feed it the target collector and port. The use of environment variables allows this to be run as a container.
 
-	./nflow_generator -t <ip> -p <port> [ -f | --false-index ]
+  COLLECTOR_IP=127.0.0.1 COLLECTOR_PORT=9001 go run .
+
+### REST interface
+
+The nflow_generator can be controlled via a simple REST interface over HTTP
+
+	/api/v1/generate/start - start the netflow packet generation
+	/api/v1/generate/stop  - stop the netflow generation
+	/api/v1/status         - check if the packet generation is running or not
 
 ### Run a Test Collection
 
@@ -104,22 +108,3 @@ Flow Record:
   dst as       =             50617
 
 ```
-
-### Notes
-
-The original mock netflow generator placed random values in several fields which confused 
-certain netflow collectors that complained about inaccurate time stamps, 
-and were confused by the random values sent in the input and output interface fields. 
-
-Changes:
-
-* Sets the `SysUptime`, `unix_secs`, and `unix_nsecs` fields of the Netflow datagrams to sensible (UTC) values
-* Generates a unique `flow_sequence` value for each netflow datagram
-* Creates reasonable start/stop times for flows, so the First is set to (now-X) and Last to (now-Y), where X & Y are random times, and X > Y.
-* If the --false-index (-f) flag is set on the command line, 
-use this algorithm to set the interface indexes to 1 or 2:
-If the source address > dest address, input interface is set to 1, and set to 2 otherwise,
-and the output interface is set to the opposite value.
-If the -f is missing, both snmp interface indexes will be set to 0. [Default]
-
-To learn more about Netflow version 5 datagram formats, see the [Cisco Netflow documentation](http://www.cisco.com/c/en/us/td/docs/net_mgmt/netflow_collection_engine/3-6/user/guide/format.html)
