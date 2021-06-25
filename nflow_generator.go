@@ -47,8 +47,7 @@ func main() {
 }
 
 func generate(gen_ctx *generate_context_t) {
-	// log.Println("generate called")
-	log.Printf("generate called: g_ctx: %p\n", gen_ctx)
+	log.Println("Starting netflow packet generation")
 	gen_ctx.is_running = true
 	udpAddr, err := net.ResolveUDPAddr("udp", gen_ctx.collector)
 	if err != nil {
@@ -58,19 +57,16 @@ func generate(gen_ctx *generate_context_t) {
 	conn, err := net.DialUDP("udp", nil, udpAddr)
 	if err != nil {
 		log.Println("Error connecting to the target collector: " + err.Error())
+		os.Exit(1)
 	}
 	defer conn.Close()
 
-	log.Println("sending netflow data to collector" + gen_ctx.collector)
-
 	for {
-		// log.Println("generate: top of loop")
 		select {
 		case command := <-gen_ctx.command:
-			log.Printf("generate: command received: %d\n", command)
 			if command == 0 {
 				gen_ctx.is_running = false
-				log.Println("generate: finishing up")
+				log.Println("Stopping netflow packet generation")
 				return
 			}
 		default:
